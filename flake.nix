@@ -33,7 +33,7 @@
         throw "unsupported type : ${lType}";
   in {
     lib = {
-      nix2zon = { value, lvl ? 0 }:
+      toZon = { value, lvl ? 0 }:
         let
           type = builtins.typeOf value;
           padding = lib.strings.replicate (2 * lvl) " "; 
@@ -41,7 +41,7 @@
         if (type == "list") then
           let
             content = lib.strings.concatMapStringsSep ",\n  ${padding}" (value:
-              self.lib.nix2zon { inherit value; lvl = lvl + 1; }
+              self.lib.toZon { inherit value; lvl = lvl + 1; }
             ) value;
           in
           ".{\n  ${padding}${content}${if (builtins.length value) > 1 then "," else ""}\n${padding}}"
@@ -49,7 +49,7 @@
           let
             values = lib.attrsets.attrsToList value;
             content = lib.strings.concatMapStringsSep ",\n  ${padding}" ({name, value}:
-              ".${name} = ${self.lib.nix2zon { inherit value; lvl = lvl + 1; }}"
+              ".${name} = ${self.lib.toZon { inherit value; lvl = lvl + 1; }}"
             ) values;
           in
           ".{\n  ${padding}${content}${if (builtins.length values) > 1 then "," else ""}\n${padding}}"
