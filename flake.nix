@@ -1,4 +1,7 @@
 {
+  inputs = {
+    nixpkgs.url = "nixpkgs/release-25.05";
+  };
   description = "Output a function nix2zon which you can use in your flake";
   outputs = { self, nixpkgs }:
   let
