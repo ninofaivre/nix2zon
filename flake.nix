@@ -1,11 +1,11 @@
 {
   inputs = {
-    nixpkgs.url = "nixpkgs/release-25.05";
+    nixpkgs-lib.url = "github:nix-community/nixpkgs.lib";
   };
   description = "Output a function nix2zon which you can use in your flake";
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs-lib }:
   let
-    inherit (nixpkgs) lib;
+    inherit (nixpkgs-lib) lib;
     nixLitteralToZon = litteral:
       let
         lType = builtins.typeOf litteral;
