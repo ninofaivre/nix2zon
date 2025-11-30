@@ -1,6 +1,15 @@
 # TODO configurable padding level (number of spaces)
 { lib }: let
-  nixliteralToZon = literal:
+  zigKeywords = import ./zigKeywords.nix;
+  quoteIdentifier = conf: identifier:
+    if (
+      conf.quoteAllIdentifiers == true ||
+      (conf.quoteInvalidIdentifiers == true &&
+        ((builtins.match "[[:alpha:]_][[:alnum:]_]*" identifier) == null ||
+        lib.elem identifier zigKeywords))
+    ) then "@\"${identifier}\""
+    else identifier;
+  nixliteralToZon = conf: literal:
     let
       lType = builtins.typeOf literal;
     in
@@ -11,7 +20,9 @@
     else if lType == "null" then
       "null"
     else if lType == "string" then
-      if ((builtins.substring 0 1 literal) == "." || (builtins.substring 0 2 literal) == "0x" ||
+      if builtins.substring 0 1 literal == "." then
+        ".${quoteIdentifier conf (builtins.substring 1 (-1) literal)}"
+      else if ((builtins.substring 0 2 literal) == "0x" ||
           (builtins.substring 0 2 literal) == "0o" || (builtins.substring 0 2 literal) == "0b"
       ) then
         literal
@@ -28,10 +39,18 @@
       "\"${literal}\"" 
     else
       throw "unsupported type : ${lType}";
-  toZon = { suppressNullAttrValues ? false }@conf: { lvl ? 0 }@ctx: value:
+  toZon = {
+      suppressNullAttrValues ? false,
+      quoteInvalidIdentifiers ? true,
+      quoteAllIdentifiers ? false,
+    }: { lvl ? 0 }@ctx: value:
     let
       type = builtins.typeOf value;
       padding = lib.strings.replicate (2 * lvl) " "; 
+      conf = {
+        inherit suppressNullAttrValues quoteInvalidIdentifiers
+          quoteAllIdentifiers;
+      };
     in
     if type == "list" then
       let
@@ -55,12 +74,12 @@
           else value
         );
         content = lib.strings.concatMapStringsSep ",\n  ${padding}" ({name, value}:
-          ".${name} = ${toZon conf (ctx // { lvl = lvl + 1; }) value}"
+          ".${quoteIdentifier conf name} = ${toZon conf (ctx // { lvl = lvl + 1; }) value}"
         ) values;
       in
       if builtins.length values == 0 then ".{}"
       else ".{\n  ${padding}${content},\n${padding}}"
     else
-      nixliteralToZon value;
+      nixliteralToZon conf value;
 in conf: value:
   toZon conf {} value

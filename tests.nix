@@ -10,7 +10,13 @@
     testFloat = { expr = toZon 42.42; expected = "42.420000"; };
     testBool = { expr = toZon false; expected = "false"; };
     testNull = { expr = toZon null; expected = "null"; };
-    testEnum = { expr = toZon ".fortyTwo"; expected = ".fortyTwo"; };
+    enums = {
+      testDefault = { expr = toZon ".fortyTwo"; expected = ".fortyTwo"; };
+      testInvalidIdentifier = {
+        expr = toZon ".42-@";
+        expected = ".@\"42-@\"";
+      };
+    };
     strings = {
       testDefault = {
         expr = toZon "fortyTwo";
@@ -100,6 +106,7 @@
     # there is currently no nix package for it
     testMixed = {
       expr = generators.toZon { suppressNullAttrValues = true; } {
+        "@invalid-identifier@" = 42;
         array = [ 21 42 84 ];
         emptyArray = [];
         emptyAttrSet = {};
@@ -122,6 +129,7 @@
       };
       expected = ''
         .{
+          .@"@invalid-identifier@" = 42,
           .array = .{
             21,
             42,
