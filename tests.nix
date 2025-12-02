@@ -47,6 +47,44 @@
       };
     };
   };
+  padding = {
+    arrays = {
+      testEmpty = {
+        expr = generators.toZon { padding = "\t\t"; } [];
+        expected = ".{}";
+      };
+      testOneElement = {
+        expr = generators.toZon { padding = "\t\t"; } [42];
+        expected = ".{ 42 }";
+      };
+      testMultipleElements = {
+        expr = generators.toZon { padding = "\t\t"; } [ 21 42 84 ];
+        expected = ''
+          .{
+          		21,
+          		42,
+          		84,
+          }''
+        ;
+      };
+    };
+    structs = {
+      testEmpty = {
+        expr = generators.toZon { padding = "\t\t"; } {};
+        expected = ".{}";
+      };
+      testDefault = {
+        expr = generators.toZon { padding = "\t\t"; } {
+          fortyTwo = "fortyTwo";
+        };
+        expected = ''
+          .{
+          		.fortyTwo = "fortyTwo",
+          }''
+        ;
+      };
+    };
+  };
   arrays = {
     testEmpty = { expr = toZon []; expected = ".{}"; };
     testOneElement = { expr = toZon [42]; expected = ".{ 42 }"; };

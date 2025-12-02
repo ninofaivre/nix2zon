@@ -1,4 +1,3 @@
-# TODO configurable padding level (number of spaces)
 { lib }: let
   zigKeywords = import ./zigKeywords.nix;
   quoteIdentifier = conf: identifier:
@@ -43,29 +42,32 @@
       suppressNullAttrValues ? false,
       quoteInvalidIdentifiers ? true,
       quoteAllIdentifiers ? false,
+      padding ? "  ",
     }: { lvl ? 0 }@ctx: value:
     let
       type = builtins.typeOf value;
-      padding = lib.strings.replicate (2 * lvl) " "; 
       conf = {
         inherit suppressNullAttrValues quoteInvalidIdentifiers
-          quoteAllIdentifiers;
+          quoteAllIdentifiers padding;
       };
+      cPadding = lib.strings.replicate lvl padding; 
     in
     if type == "list" then
       let
-        content = lib.strings.concatMapStringsSep ",\n  ${padding}" (value:
+        content = lib.strings.concatMapStringsSep ",\n${padding}${cPadding}" (value:
           toZon conf (ctx // { lvl = lvl + 1; }) value
         ) value;
         nValues = builtins.length value;
       in
       if nValues == 0 then
         ".{}"
-      else
-        ".{${lib.optionalString (nValues > 1) "\n "} ${padding}${content}${
-            if nValues > 1 then ",\n"
-            else " "
-          }${padding}}"
+      else lib.concatStrings [
+        ".{"
+        (if (nValues > 1) then "\n${padding}" else " ")
+        "${cPadding}${content}"
+        (if (nValues > 1) then ",\n" else " ")
+        "${cPadding}}"
+      ]
     else if type == "set" then
       let
         values = lib.attrsets.attrsToList (
@@ -73,12 +75,12 @@
             (lib.filterAttrs (_: x: x != null) value)
           else value
         );
-        content = lib.strings.concatMapStringsSep ",\n  ${padding}" ({name, value}:
+        content = lib.strings.concatMapStringsSep ",\n${padding}${cPadding}" ({name, value}:
           ".${quoteIdentifier conf name} = ${toZon conf (ctx // { lvl = lvl + 1; }) value}"
         ) values;
       in
       if builtins.length values == 0 then ".{}"
-      else ".{\n  ${padding}${content},\n${padding}}"
+      else ".{\n${padding}${cPadding}${content},\n${cPadding}}"
     else
       nixliteralToZon conf value;
 in conf: value:
