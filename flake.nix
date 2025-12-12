@@ -12,6 +12,15 @@
     lib = {
       toZon = toZon {};
       generators.toZon = toZon; 
+      # use this helper in `preBuild` hook to generate build.zig.zon with symlinked dependencies
+      genBuildZig = { depsDirName ? "zigDeps", linkFarm }: buildAttr: ''
+        ln -s ${linkFarm depsDirName buildAttr.dependencies} ./${depsDirName} -f
+        >build.zig.zon cat <<< '${toZon {} (buildAttr // {
+          dependencies = builtins.mapAttrs (name: _: {
+            path = "\\./${depsDirName}/${name}/";
+          }) buildAttr.dependencies;
+        })}'
+      '';
     };
     # run with `nix-unit --flake .#tests`
     # **nix flake check would have required glue code or extra dependencies
