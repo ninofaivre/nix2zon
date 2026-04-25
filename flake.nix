@@ -26,6 +26,7 @@
     # **nix flake check would have required glue code or extra dependencies
     # in order to work because of `system` which do not seems a good
     # trade off for testing pure nix**
+    # `nix run nixpkgs/nixos-25.11#nix-unit -- --flake .#tests`
     tests = import ./tests.nix { inherit (self.lib) toZon generators; };
   };
 }
