@@ -14,7 +14,7 @@
       generators.toZon = toZon; 
       # use this helper in `preBuild` hook to generate build.zig.zon with symlinked dependencies
       genBuildZig = { depsDirName ? "zigDeps", linkFarm }: buildAttr: ''
-        ln -s ${linkFarm depsDirName buildAttr.dependencies} ./${depsDirName} -f
+        ln -snf ${linkFarm depsDirName buildAttr.dependencies} ./${depsDirName}
         >build.zig.zon cat <<< '${toZon {} (buildAttr // {
           dependencies = builtins.mapAttrs (name: _: {
             path = "\\./${depsDirName}/${name}/";
